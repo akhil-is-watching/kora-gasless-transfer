@@ -5,20 +5,20 @@ import {
   LedgerWalletAdapter,
   CoinbaseWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
-import type { WalletAdapter } from "@solana/wallet-adapter-base";
+import type { Adapter } from "@solana/wallet-adapter-base";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
-import type { PublicKey, VersionedTransaction } from "@solana/web3.js";
+import type { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 
 export interface WalletInfo {
   name: string;
   icon: string;
-  adapter: WalletAdapter;
+  adapter: Adapter;
   readyState: WalletReadyState;
 }
 
 export class WalletManager {
   private wallets: WalletInfo[] = [];
-  private connectedWallet: WalletAdapter | null = null;
+  private connectedWallet: Adapter | null = null;
   private onConnectCallbacks: ((publicKey: PublicKey) => void)[] = [];
   private onDisconnectCallbacks: (() => void)[] = [];
 
@@ -27,7 +27,7 @@ export class WalletManager {
   }
 
   private initWallets() {
-    const adapters = [
+    const adapters: Adapter[] = [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
       new CoinbaseWalletAdapter(),
@@ -79,7 +79,7 @@ export class WalletManager {
     }
   }
 
-  getConnectedWallet(): WalletAdapter | null {
+  getConnectedWallet(): Adapter | null {
     return this.connectedWallet;
   }
 
@@ -92,10 +92,15 @@ export class WalletManager {
   }
 
   async signTransaction(tx: VersionedTransaction): Promise<VersionedTransaction> {
-    if (!this.connectedWallet?.signTransaction) {
+    const wallet = this.connectedWallet as {
+      signTransaction?: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
+    } | null;
+
+    if (!wallet?.signTransaction) {
       throw new Error("Wallet does not support signing transactions");
     }
-    return this.connectedWallet.signTransaction(tx);
+
+    return wallet.signTransaction(tx);
   }
 
   onConnect(callback: (publicKey: PublicKey) => void): void {
@@ -108,4 +113,3 @@ export class WalletManager {
 }
 
 export const walletManager = new WalletManager();
-

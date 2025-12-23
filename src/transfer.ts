@@ -184,7 +184,7 @@ export async function executeGaslessTransfer(
 
   return {
     signature,
-    paymentAmount: paymentResponse.payment_amount,
+    paymentAmount: String(paymentResponse.payment_amount),
     paymentToken,
   };
 }
