@@ -61,8 +61,8 @@ function render() {
       <main class="main">
         <div class="card transfer-card">
           <div class="card-header">
-            <h1 class="card-title">Gasless SOL Transfer</h1>
-            <p class="card-description">Send SOL without paying gas fees. Powered by Kora.</p>
+            <h1 class="card-title">Gasless Token Transfer</h1>
+            <p class="card-description">Send tokens without paying gas fees. Powered by Kora.</p>
           </div>
 
           <div class="card-content">
@@ -75,7 +75,7 @@ function render() {
                   <path d="M6 20h36"/>
                   <circle cx="36" cy="28" r="4"/>
                 </svg>
-                <p>Connect your wallet to start transferring SOL</p>
+                <p>Connect your wallet to start transferring tokens</p>
                 <button class="btn btn-primary btn-lg" id="connect-prompt-btn">Connect Wallet</button>
               </div>
             `
@@ -94,19 +94,19 @@ function render() {
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label" for="amount">Amount (SOL)</label>
+                  <label class="form-label" for="amount">Amount</label>
                   <div class="input-with-suffix">
                     <input 
                       type="number" 
                       id="amount" 
                       class="form-input" 
                       placeholder="0.00"
-                      step="0.000000001"
+                      step="0.000001"
                       min="0.000001"
                       ${isTransferring ? "disabled" : ""}
                       required
                     />
-                    <span class="input-suffix">SOL</span>
+                    <span class="input-suffix">USDC</span>
                   </div>
                 </div>
 
@@ -133,7 +133,7 @@ function render() {
                     </svg>
                     <div class="result-content">
                       <h3>Transfer Successful!</h3>
-                      <p>Payment: ${transferResult.paymentAmount} tokens</p>
+                      <p>Fee: ${transferResult.paymentAmount} USDC</p>
                       <a href="https://explorer.solana.com/tx/${transferResult.signature}" target="_blank" rel="noopener" class="result-link">
                         View on Explorer →
                       </a>
@@ -175,7 +175,7 @@ function render() {
                     <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M12 5v14M5 12h14"/>
                     </svg>
-                    Send SOL
+                    Send Tokens
                   `
                   }
                 </button>
@@ -334,7 +334,7 @@ async function connectWallet(wallet: WalletInfo) {
   }
 }
 
-async function handleTransfer(recipient: string, amountSol: number) {
+async function handleTransfer(recipient: string, amount: number) {
   const publicKey = walletManager.getPublicKey();
   if (!publicKey) {
     alert("Please connect your wallet first");
@@ -348,11 +348,12 @@ async function handleTransfer(recipient: string, amountSol: number) {
   render();
 
   try {
-    const lamports = Math.floor(amountSol * 1_000_000_000);
+    // Token has 6 decimals
+    const tokenAmount = Math.floor(amount * 1_000_000);
     const result = await executeGaslessTransfer(
       publicKey,
       recipient,
-      lamports,
+      tokenAmount,
       (tx) => walletManager.signTransaction(tx),
       (progress) => {
         currentProgress = progress;
